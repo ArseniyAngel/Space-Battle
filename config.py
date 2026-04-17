@@ -1,0 +1,36 @@
+# config.py
+SCREEN_WIDTH = 1080
+SCREEN_HEIGHT = 720
+SCREEN_TITLE = "Space Shield Manager"
+
+# Физика игрока
+PLAYER_SPEED = 10.0
+PLAYER_TURN_SPEED = 1.0
+ACCELERATION = 0.12
+DRAG = 0.98
+BULLET_SPEED = 500.0
+
+# Щиты и энергия
+MAX_ENERGY = 100.0
+ENERGY_REGEN_RATE = 20.0
+MAX_SHIELD_PER_SECTOR = 100.0
+SHIELD_TRANSFER_RATE = 60.0
+SHIELD_LABELS = ["1 - BACK", "2 - RIGHT", "3 - FRONT", "4 - LEFT"]
+
+# Враги
+ENEMY_SPEED = 10.0
+ENEMY_SPAWN_INTERVAL = 5
+ENEMY_HP = 100
+BULLET_DAMAGE = 15
+SCORE_PER_KILL = 100
+
+# Частицы
+PARTICLE_COLORS = [
+    (255, 0, 0),      # RED
+    (255, 165, 0),    # ORANGE
+    (255, 255, 0),    # YELLOW
+]
+
+# Пути к ресурсам
+ASSETS_DIR = "assets"
+SOUNDS_DIR = f"{ASSETS_DIR}/sounds"
