@@ -1,4 +1,3 @@
-# views/game_view.py
 import random
 import math
 import arcade
@@ -14,7 +13,6 @@ class GameView(arcade.View):
         self.SCREEN_WIDTH = self.window.width
         self.SCREEN_HEIGHT = self.window.height
         self.window.set_fullscreen(True)
-        # Позиция и угол корабля
         self.player = arcade.Sprite("assets/Spaceship.png", scale=0.25)
 
         self.player.center_x = self.SCREEN_WIDTH / 2
@@ -48,35 +46,30 @@ class GameView(arcade.View):
         self.setup_camera()
         self.player.change_x = 0
         self.player.change_y = 0
-        self.accel = 0.2  # Сила двигателя
+        self.accel = 0.2
         self.drag = 0.98
         self.show_vectors = False
-        # Таймер и очередь для залпа
-        self.firing_queue = []  # Список пушек, которые ждут выстрела (хранит смещение)
-        self.fire_timer = 0.0  # Таймер отсчета времени
-        self.fire_side_offset = 0  # Запоминаем, стреляем влево (+90) или вправо (-90)
-        self.FIRE_DELAY = 0.08  # Задержка между пушками (в секундах)
+        self.firing_queue = []
+        self.fire_timer = 0.0
+        self.fire_side_offset = 0
+        self.FIRE_DELAY = 0.08
 
-        # 🌟 ПАРАЛЛАКС-ФОН: создаём звёздные слои
-        self.stars_far = arcade.SpriteList()  # Дальние звёзды (медленные)
-        self.stars_medium = arcade.SpriteList()  # Средние звёзды
-        self.stars_near = arcade.SpriteList()  # Ближние звёзды (быстрые)
+        self.stars_far = arcade.SpriteList()
+        self.stars_medium = arcade.SpriteList()
+        self.stars_near = arcade.SpriteList()
 
-        # Создаём текстуры звёзд разного размера
-        self.star_texture_far = arcade.make_circle_texture(2, arcade.color.WHITE)
+        self.star_texture_far = arcade.make_circle_texture(2, arcade.color.LIGHT_CYAN)
         self.star_texture_medium = arcade.make_circle_texture(3, arcade.color.WHITE)
         self.star_texture_near = arcade.make_circle_texture(5, arcade.color.GRAY)
 
-        # Генерируем звёзды
         self._generate_stars()
-        self.target_score = target_score  # Цель для победы (или None для бесконечного)
-        self.endless_mode = endless_mode  # Режим бесконечной волны
-        self.kills_count = 0  # Счётчик убийств для бесконечного режима
+        self.target_score = target_score
+        self.endless_mode = endless_mode
+        self.kills_count = 0
 
-        self.is_dead = False  # Флаг: игрок мёртв?
+        self.is_dead = False
         self.death_timer = 0.0
 
-        # Тексты для отображения цели
         if endless_mode:
             self.goal_text = arcade.Text("♾ ENDLESS MODE", self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT - 50,
                                          arcade.color.PURPLE, 16, anchor_x="center")
@@ -88,37 +81,14 @@ class GameView(arcade.View):
             if self.window.current_view.music_player:
                 self.window.current_view.music_player.delete()
 
-        # try:
-        #     "shoot" = arcade.load_sound("assets/sounds/cannon-shot.wav")
-        #     "explosion" = arcade.load_sound("assets/sounds/single-explosion.mp3")
-        #     "hit" = arcade.load_sound("assets/sounds/shield.wav")
-        #     self.background_music = arcade.load_sound("assets/sounds/soundtrack.mp3")
-        # except:
-        #     "shoot" = arcade.load_sound(":resources:/sounds/hit1.wav")
-        #     "explosion" = arcade.load_sound(":resources:/sounds/hit2.wav")
-        #     "hit" = None
-        #     self.background_music = None
-        # Встроенный звук, если файл не найден
-        self.screen_shake = 0.0  # Сила тряски
+        self.screen_shake = 0.0
         self.shake_duration = 0.0
         self.paused = False
-        # self.music_player = None
-        # self.start_background_music()
         self.sound_manager = SoundManager()
         self.sound_manager.play_music()
 
-    def start_background_music(self):
-        """Запускает фоновую музыку с зацикливанием"""
-        if self.background_music:
-            # Останавливаем, если уже играет
-            if self.music_player:
-                self.music_player.delete()
-            # Запускаем новую с громкостью 0.5 (0.0–1.0)
-            self.music_player = self.sound_manager.play(self.background_music, volume=0.5, loop=True)
-
     def _generate_stars(self):
         """Создаёт звёзды для всех слоёв"""
-        # Дальние звёзды (много, маленькие, медленные)
         for _ in range(100):
             star = arcade.Sprite(self.star_texture_far)
             star.center_x = random.randint(0, self.SCREEN_WIDTH)
@@ -126,7 +96,6 @@ class GameView(arcade.View):
             star.parallax_factor = 0.1  # Очень медленные
             self.stars_far.append(star)
 
-        # Средние звёзды
         for _ in range(50):
             star = arcade.Sprite(self.star_texture_medium)
             star.center_x = random.randint(0, self.SCREEN_WIDTH)
@@ -134,12 +103,11 @@ class GameView(arcade.View):
             star.parallax_factor = 0.3  # Средняя скорость
             self.stars_medium.append(star)
 
-        # Ближние звёзды (мало, большие, быстрые)
         for _ in range(20):
             star = arcade.Sprite(self.star_texture_near)
             star.center_x = random.randint(0, self.SCREEN_WIDTH)
             star.center_y = random.randint(0, self.SCREEN_HEIGHT)
-            star.parallax_factor = 0.6  # Быстрые
+            star.parallax_factor = 0.6
             self.stars_near.append(star)
 
     def setup_camera(self):
@@ -150,13 +118,9 @@ class GameView(arcade.View):
     def on_draw(self):
         self.clear()
 
-        # 1. Визуальная коррекция: картинка "носом вверх" превращается в "нос по вектору"
         old_angle = self.player.angle
-        self.player.angle -= 270  # Поворачиваем на 90 градусов только для отрисовки
+        self.player.angle -= 270
 
-        # Используем глобальную функцию отрисовки вместо метода объекта
-
-        # 2. Отрисовка остальных списков
         self.stars_far.draw()
         self.stars_medium.draw()
         self.stars_near.draw()
@@ -167,14 +131,11 @@ class GameView(arcade.View):
         self.engine_particles.draw()
         if not self.is_dead or self.death_timer < 0.3:
             arcade.draw_sprite(self.player)
-        self.player.angle = old_angle  # Возвращаем оригинальный угол для расчетов логики
+        self.player.angle = old_angle
         self.particles.draw()
 
-        # 3. Интерфейс и эффекты
         self.draw_ui()
         self.draw_shield_effects()
-
-        # Отладка и тексты
 
         self.hp_text.text = f"HP: {self.player_hp}"
         self.hp_text.draw()
@@ -186,9 +147,9 @@ class GameView(arcade.View):
             arcade.draw_text(f"Wave: x{multiplier:.1f}",
                              self.SCREEN_WIDTH - 200, self.SCREEN_HEIGHT - 25,
                              arcade.color.ORANGE, 12, anchor_x="center")
-        # ... после self.score_text.draw() ...
+
         if self.show_vectors:
-            # Расчёт векторов БЕЗ смещений
+
             self.debug_text.text = f"Angle: {self.player.angle:.1f}°"
             self.debug_text.draw()
             self.shield_text.text = f"Selected: {SHIELD_LABELS[self.selected_shield]}"
@@ -197,19 +158,16 @@ class GameView(arcade.View):
             forward_x = math.cos(angle_rad)
             forward_y = math.sin(angle_rad)
 
-            # КРАСНАЯ линия - ВДОЛЬ НОСА
             nose_x = self.player.center_x + forward_x * 60
             nose_y = self.player.center_y + forward_y * 60
             arcade.draw_line(self.player.center_x, self.player.center_y, nose_x, nose_y, arcade.color.RED, 3)
 
-            # ЗЕЛЕНАЯ - ЛЕВЫЙ БОРТ
             left_x = -forward_y
             left_y = forward_x
             arcade.draw_line(self.player.center_x, self.player.center_y,
                              self.player.center_x + left_x * 60, self.player.center_y + left_y * 60,
                              arcade.color.GREEN, 3)
 
-            # СИНЯЯ - ПРАВЫЙ БОРТ
             right_x = forward_y
             right_y = -forward_x
             arcade.draw_line(self.player.center_x, self.player.center_y,
@@ -228,80 +186,62 @@ class GameView(arcade.View):
                 arcade.set_viewport(0, self.SCREEN_WIDTH, 0, self.SCREEN_HEIGHT)
 
     def get_current_spawn_interval(self):
-        """Возвращает текущий интервал спавна (уменьшается с ростом убийств)"""
         if not self.endless_mode:
             return ENEMY_SPAWN_INTERVAL
 
-        # Чем больше убийств, тем меньше интервал (но не меньше 0.3 сек)
-        # Формула: базовый интервал / (1 + kills * 0.02)
         return max(0.3, ENEMY_SPAWN_INTERVAL / (1 + self.kills_count * 0.02))
 
     def draw_rotated_ellipse_arc(self, center_x, center_y, width, height,
                                  angle, start_angle, end_angle, color, thickness=2):
-        """
-        Рисует дугу эллипса с вращением.
-        angle - угол вращения всего эллипса (в градусах)
-        start_angle, end_angle - углы дуги относительно эллипса (в градусах)
-        """
 
-        # Преобразуем в радианы
         rotation_rad = math.radians(angle)
         start_rad = math.radians(start_angle)
         end_rad = math.radians(end_angle)
 
-        # Полуоси эллипса
         a = width / 2
         b = height / 2
 
-        # Количество точек для плавности
         num_points = 50
         points = []
 
         for i in range(num_points + 1):
             t = start_rad + (end_rad - start_rad) * i / num_points
 
-            # Точка на эллипсе (без вращения)
             x = a * math.cos(t)
             y = b * math.sin(t)
 
-            # Применяем вращение
             x_rot = x * math.cos(rotation_rad) + y * math.sin(rotation_rad)
             y_rot = x * math.sin(rotation_rad) - y * math.cos(rotation_rad)
 
             points.append((center_x - x_rot, center_y + y_rot))
 
-        # Рисуем линию по точкам
         if len(points) > 1:
             arcade.draw_line_strip(points, color, thickness)
 
     def draw_shield_effects(self):
-        # Рисуем эллиптические щиты вокруг игрока
-        # Размеры эллипса под вытянутый корабль
-        shield_width = 200  # вдоль корабля
-        shield_height = 50  # поперёк корабля
+
+        shield_width = 200
+        shield_height = 50
 
         for i in range(4):
-            # Определяем сектор щита (FRONT, RIGHT, BACK, LEFT)
-            # 0 градусов эллипса - это направление вправо по X
+
             sector_start = i * 90 - 45
             sector_end = (i + 1) * 90 - 45
 
             shield_percent = self.shields[i] / MAX_SHIELD_PER_SECTOR
             if shield_percent > 0:
-                # Цвет: от голубого (полный) к красному (повреждён)
                 color = (int(255 * (1 - shield_percent)),
                          int(200 * shield_percent),
                          255,
-                         int(150 * shield_percent))  # Прозрачность
+                         int(150 * shield_percent))
 
-                # Рисуем несколько слоёв для толщины
                 for offset in range(0, 6, 2):
                     self.draw_rotated_ellipse_arc(
                         self.player.center_x,
                         self.player.center_y,
                         shield_width + offset,
                         shield_height + offset,
-                        self.player.angle - 90,  # Вращение эллипса вместе с кораблём!
+                        self.player.angle - 90,
                         sector_start,
                         sector_end,
                         color,
@@ -334,21 +274,18 @@ class GameView(arcade.View):
                 arcade.draw_rect_filled(arcade.XYWH(x + fill / 2, ui_y, fill, bar_h), base_color)
 
     def on_update(self, delta_time: float):
-        # В on_update:
         if self.paused:
             return
         if hasattr(self, 'prev_player_x'):
-            # Вычисляем смещение игрока
+
             dx = self.player.center_x - self.prev_player_x
             dy = self.player.center_y - self.prev_player_y
 
-            # Двигаем звёзды с разным параллаксом
             for star_list in [self.stars_far, self.stars_medium, self.stars_near]:
                 for star in star_list:
                     star.center_x -= dx * star.parallax_factor
                     star.center_y -= dy * star.parallax_factor
 
-                    # Звёзды зацикливаются (появляются с другой стороны)
                     if star.center_x < 0:
                         star.center_x = self.SCREEN_WIDTH
                     elif star.center_x > self.SCREEN_WIDTH:
@@ -358,20 +295,16 @@ class GameView(arcade.View):
                     elif star.center_y > self.SCREEN_HEIGHT:
                         star.center_y = 0
 
-            # Запоминаем текущую позицию
             self.prev_player_x = self.player.center_x
             self.prev_player_y = self.player.center_y
-        if self.firing_queue:  # Если очередь не пуста
+        if self.firing_queue:
             self.fire_timer -= delta_time
 
             if self.fire_timer <= 0:
-                # Достаем следующую пушку из начала очереди
                 gun_offset = self.firing_queue.pop(0)
 
-                # Стреляем из неё
                 self.fire_single_gun(gun_offset, self.fire_side_offset)
 
-                # Сбрасываем таймер для следующей пули
                 self.fire_timer = self.FIRE_DELAY
         # 1. Поворот
         if arcade.key.A in self.keys_held:
@@ -385,9 +318,9 @@ class GameView(arcade.View):
             self.player.change_x += math.cos(rad) * ACCELERATION
             self.player.change_y += math.sin(rad) * ACCELERATION
 
-            # 2. Точка хвоста (строго позади вектора движения)
-            tail_rad = rad + math.pi  # Разворот на 180°
-            tail_dist = 40  # Подбери под длину своего спрайта
+            # 2. Ракетный хвост
+            tail_rad = rad + math.pi
+            tail_dist = 40
 
             spawn_x = self.player.center_x + math.cos(tail_rad) * tail_dist
             spawn_y = self.player.center_y + math.sin(tail_rad) * tail_dist
@@ -397,17 +330,14 @@ class GameView(arcade.View):
             exhaust_speed = 200
 
             for _ in range(3):
-                # Небольшой разброс для естественности
                 spread = random.uniform(-0.2, 0.2)
                 vx = math.cos(back_rad + spread) * exhaust_speed
                 vy = math.sin(back_rad + spread) * exhaust_speed
 
-                # 👇 Передаём вектор скорости сразу
                 self.engine_particles.append(EngineParticle(spawn_x, spawn_y, vx, vy))
         if arcade.key.P in self.keys_held:
             self.show_vectors = not (self.show_vectors)
 
-        # ОГРАНИЧЕНИЕ МАКСИМАЛЬНОЙ СКОРОСТИ (чтобы не улетал в бесконечность)
         max_speed = 0.5
         current_speed = math.hypot(self.player.change_x, self.player.change_y)
         if current_speed > max_speed:
@@ -415,17 +345,14 @@ class GameView(arcade.View):
             self.player.change_x *= ratio
             self.player.change_y *= ratio
 
-        # Вместо ручного сложения используем встроенный метод, он плавнее
         self.player.update()
 
-        # Инерция (затухание)
         self.player.change_x *= DRAG
         self.player.change_y *= DRAG
-        # Границы экрана
         self.player.center_x = max(18, min(self.SCREEN_WIDTH - 18, self.player.center_x))
         self.player.center_y = max(18, min(self.SCREEN_HEIGHT - 18, self.player.center_y))
 
-        # 2. Регенерация энергии (только когда НЕ жмём пробел)
+        # 2. Регенерация энергии
         if arcade.key.SPACE not in self.keys_held and self.energy_pool < MAX_ENERGY:
             self.energy_pool = min(MAX_ENERGY, self.energy_pool + ENERGY_REGEN_RATE * delta_time)
 
@@ -443,7 +370,6 @@ class GameView(arcade.View):
         for bullet in self.bullets:
             bullet.center_x += bullet.change_x * delta_time
             bullet.center_y += bullet.change_y * delta_time
-            # Удаляем, если улетел за пределы экрана (с запасом)
             if not (-50 < bullet.center_x < self.SCREEN_WIDTH + 50 and -50 < bullet.center_y < self.SCREEN_HEIGHT + 50):
                 bullet.remove_from_sprite_lists()
         for bullet in self.enemy_bullets:
@@ -451,16 +377,15 @@ class GameView(arcade.View):
             bullet.center_y += bullet.change_y * delta_time
             if not (-50 < bullet.center_x < self.SCREEN_WIDTH + 50 and -50 < bullet.center_y < self.SCREEN_HEIGHT + 50):
                 bullet.remove_from_sprite_lists()
-            # 5. Спавн врагов
+        # 5. Спавн врагов
         self.spawn_timer += delta_time
         current_interval = self.get_current_spawn_interval()
         if self.spawn_timer >= current_interval:
             self.spawn_enemy()
             self.spawn_timer = 0.0
 
-        # 6. ИИ врагов: преследование игрока
+        # 6. ИИ врагов
         for enemy in self.enemies:
-            # Обновляем таймер ВСЕГДА
             enemy.shoot_timer += delta_time
 
             dist = math.hypot(self.player.center_x - enemy.center_x, self.player.center_y - enemy.center_y)
@@ -468,20 +393,17 @@ class GameView(arcade.View):
                                          self.player.center_x - enemy.center_x)
 
             angle_diff = (angle_to_player - math.radians(enemy.angle) + math.pi) % (2 * math.pi) - math.pi
-            enemy.angle += math.degrees(angle_diff) * 0.05  # 0.05 = плавность поворота
-            # Логика движения (пусть держатся на расстоянии 250 пикселей)
+            enemy.angle += math.degrees(angle_diff) * 0.05
             if dist > 250:
                 rad = math.radians(enemy.angle)
                 enemy.center_x += math.cos(rad) * ENEMY_SPEED * delta_time
                 enemy.center_y += math.sin(rad) * ENEMY_SPEED * delta_time
-            # СТРЕЛЬБА: Враг стреляет, если он видит игрока (дистанция < 500)
             if dist <= 350 and enemy.shoot_timer > 2.5:
                 self.spawn_enemy_bullet(enemy.center_x, enemy.center_y, angle_to_player)
                 enemy.shoot_timer = 0
 
-        # 7. Коллизии: пули → враги (исправлено для Arcade 3.x)
+        # 7. Коллизия врагов
         for bullet in self.bullets:
-            # Проверяем столкновение ОДНОЙ пули со списком врагов
             hit_enemies = arcade.check_for_collision_with_list(bullet, self.enemies)
             if hit_enemies:
                 for enemy in hit_enemies:
@@ -495,14 +417,13 @@ class GameView(arcade.View):
                 bullet.remove_from_sprite_lists()
         for bullet in self.enemy_bullets:
             if arcade.check_for_collision(bullet, self.player):
-                # Применяем урон по щитам (как при столкновении с врагом)
                 self.apply_damage_from_bullet(bullet)
                 bullet.remove_from_sprite_lists()
-        # 8. Коллизии: враги → игрок (урон по щитам/HP)
+        # 8. Коллизия игрока
         for enemy in self.enemies:
             if arcade.check_for_collision(self.player, enemy):
                 self.apply_damage_to_player(enemy)
-                enemy.remove_from_sprite_lists()  # враг "врезался" и исчез
+                enemy.remove_from_sprite_lists()
         self.particles.update(delta_time)
         if self.player_hp <= 0 and not self.is_dead:
             self.is_dead = True
@@ -512,7 +433,7 @@ class GameView(arcade.View):
             self.trigger_screen_shake(8, 0.4)
         elif self.is_dead:
             self.death_timer += delta_time
-            if self.death_timer >= 1.0:  # Ждём 1 секунду (частицы успеют разлететься)
+            if self.death_timer >= 1.0:
                 from views.game_over_view import GameOverView
                 self.window.show_view(GameOverView(self.score, self.target_score, self.endless_mode))
         elif not self.endless_mode and self.score >= self.target_score:
@@ -520,7 +441,6 @@ class GameView(arcade.View):
             self.window.show_view(VictoryView(self.score, self.target_score))
         self.particles.update(delta_time)  # Взрывы
         self.engine_particles.update(delta_time)
-        # Обновление экранной тряски
         if self.shake_duration > 0:
             self.shake_duration -= delta_time
             if self.shake_duration <= 0:
@@ -531,7 +451,6 @@ class GameView(arcade.View):
         self.shake_duration = duration
 
     def fire_single_gun(self, gun_offset, side_angle_offset):
-        """Стреляет из ОДНОЙ пушки"""
         if self.energy_pool >= 2:
             self.energy_pool -= 2
             nose_rad = math.radians(90 - self.player.angle)
@@ -554,22 +473,18 @@ class GameView(arcade.View):
 
             bullet.angle = self.player.angle
 
-            # 4. Физика
             bullet.change_x = BULLET_SPEED * shot_dir_x
             bullet.change_y = BULLET_SPEED * shot_dir_y
             self.sound_manager.play("shoot", volume=0.3)
             self.bullets.append(bullet)
 
     def apply_damage_from_bullet(self, bullet):
-        """Урон от пули по щитам/корпусу"""
-        # Определяем направление прилета пули
         dx = bullet.center_x - self.player.center_x
         dy = bullet.center_y - self.player.center_y
         angle_from_player = math.degrees(math.atan2(dy, dx))
         visual_angle = self.player.angle - 270
         diff = (angle_from_player - visual_angle + 180) % 360 - 180
 
-        # Определяем сектор щита (та же логика, что для врагов)
         if -45 <= diff < 45:
             shield_idx = 0
         elif 45 <= diff < 135:
@@ -579,11 +494,9 @@ class GameView(arcade.View):
         else:
             shield_idx = 3
 
-        # Снимаем урон со щита или по корпусу
         if self.shields[shield_idx] > 0:
             self.shields[shield_idx] = max(0, self.shields[shield_idx] - 10)
             self.sound_manager.play("hit", volume=0.2)
-            # урон от пули меньше
         else:
             self.player_hp -= 10
             self.sound_manager.play("hit", volume=0.5)
@@ -591,11 +504,6 @@ class GameView(arcade.View):
                 self.spawn_explosion(self.player.center_x, self.player.center_y)
 
     def spawn_explosion(self, x, y, size: str = "medium"):
-        """
-        Создаёт многослойный взрыв
-        size: "small", "medium", "large"
-        """
-        # Настройки в зависимости от размера
         configs = {
             "small": {"particles": 20, "speed": 150, "lifetime": 0.8, "flash": True},
             "medium": {"particles": 40, "speed": 250, "lifetime": 1.2, "flash": True},
@@ -603,14 +511,11 @@ class GameView(arcade.View):
         }
         cfg = configs.get(size, configs["medium"])
 
-        # 1. Яркая вспышка в центре
         if cfg["flash"]:
             self.particles.append(ExplosionFlash(x, y))
 
-        # 2. Ударная волна
         self.particles.append(Shockwave(x, y))
 
-        # 3. Огненные частицы (горячие цвета)
         hot_colors = [arcade.color.ORANGE, arcade.color.RED, arcade.color.YELLOW, arcade.color.GOLD]
         for _ in range(cfg["particles"] // 2):
             color = random.choice(hot_colors)
@@ -622,7 +527,6 @@ class GameView(arcade.View):
             )
             self.particles.append(particle)
 
-        # 4. Дымные частицы (холодные цвета, живут дольше)
         smoke_colors = [arcade.color.GRAY, arcade.color.DARK_GRAY, arcade.color.BLACK]
         for _ in range(cfg["particles"] // 3):
             color = random.choice(smoke_colors)
@@ -632,10 +536,9 @@ class GameView(arcade.View):
                 speed=cfg["speed"] * random.uniform(0.3, 0.7),
                 lifetime=cfg["lifetime"] * random.uniform(1.2, 2.0)
             )
-            particle.gravity = -10  # Дым всплывает медленнее
+            particle.gravity = -10
             self.particles.append(particle)
 
-        # 5. Искры (мелкие, очень быстрые)
         for _ in range(cfg["particles"] // 4):
             particle = ExplosionParticle(
                 x, y, arcade.color.WHITE,
@@ -674,31 +577,26 @@ class GameView(arcade.View):
         dy = enemy.center_y - self.player.center_y
         angle_from_player = math.degrees(math.atan2(dy, dx))
 
-        # Нормализация в диапазон [-180, 180)
         visual_angle = self.player.angle - 270
         diff = (angle_from_player - visual_angle + 180) % 360 - 180
 
-        # Границы сдвинуты на +45° относительно носа корабля
         if - 45 <= diff < 45:
-            shield_idx = 0  # FRONT
+            shield_idx = 0
 
         elif 45 <= diff <= 135:
-            shield_idx = 1  # RIGHT
+            shield_idx = 1
 
         elif 135 <= diff < -90:
-            shield_idx = 2  # BACK
-        else:  # -90 <= diff < 0
-            shield_idx = 3  # LEFT
+            shield_idx = 2
+        else:
+            shield_idx = 3
 
-        # Снятие урона
         if self.shields[shield_idx] > 0:
             self.shields[shield_idx] = max(0, self.shields[shield_idx] - 25)
         else:
             self.player_hp -= 20
             if self.player_hp <= 0:
                 self.spawn_explosion(self.player.center_x, self.player.center_y)
-
-        # --- Обработка ввода ---
 
     def on_key_press(self, key: int, modifiers: int):
         self.keys_held.add(key)
@@ -710,13 +608,11 @@ class GameView(arcade.View):
             self.selected_shield = 2
         elif key == arcade.key.KEY_4:
             self.selected_shield = 3
-        elif key == arcade.key.U:
-            self.player_hp = 0
-        # # Тест урона
+        # elif key == arcade.key.U:
+        #     self.player_hp = 0
         #     self.score += 7000
         # self.shields[self.selected_shield] = max(0, self.shields[self.selected_shield] - 20)
         elif key == arcade.key.ESCAPE:
-            # Создаём меню паузы и передаём ссылку на текущую игру
             from views.pause_view import PauseView
             pause_view = PauseView(self)
             self.window.show_view(pause_view)
@@ -726,14 +622,12 @@ class GameView(arcade.View):
 
     def on_mouse_press(self, x: int, y: int, button: int, modifiers: int):
         if button == arcade.MOUSE_BUTTON_LEFT:
-            # Залп влево: добавляем в очередь позиции пушек (-35, 0, 35)
             self.firing_queue = [-2, 5, 20, 30]
             self.fire_side_offset = 90
-            self.fire_timer = 0.0  # Первая пуля вылетает сразу или через 0.08с (как настроишь)
+            self.fire_timer = 0.0
 
         elif button == arcade.MOUSE_BUTTON_RIGHT:
-            # Залп вправо
-            self.firing_queue = [30, 20, 5, -2]  # Обратный порядок для красоты
+            self.firing_queue = [30, 20, 5, -2]
             self.fire_side_offset = -90
             self.fire_timer = 0.0
 
@@ -743,5 +637,4 @@ class GameView(arcade.View):
         bullet.center_y = y + math.sin(angle_rad) * 20
         bullet.change_x = math.cos(angle_rad) * 250
         bullet.change_y = math.sin(angle_rad) * 250
-        # 👇 ВАЖНО: добавляем в отдельный список
         self.enemy_bullets.append(bullet)

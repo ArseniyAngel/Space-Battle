@@ -1,10 +1,8 @@
-# views/menu_view.py
 import arcade
 import math
 import time
 from config import *
 from utils.sounds import SoundManager
-
 
 
 class MenuView(arcade.View):
@@ -14,14 +12,12 @@ class MenuView(arcade.View):
         self.SCREEN_HEIGHT = self.window.height
         self.window.set_fullscreen(True)
 
-        # Фон
         self.background = arcade.Sprite(f"{ASSETS_DIR}/bg.jpg")
         self.background.width = self.window.width
         self.background.height = self.window.height
         self.background.center_x = self.SCREEN_WIDTH / 2
         self.background.center_y = self.SCREEN_HEIGHT / 2
 
-        # Опции меню
         self.options = [
             ("▶ Start - Easy (1000 pts)", "start_easy"),
             ("▶ Start - Medium (3000 pts)", "start_medium"),
@@ -32,7 +28,6 @@ class MenuView(arcade.View):
         ]
         self.selected = 0
 
-        # Тексты
         self.title_text = arcade.Text(
             "SPACE BATTLE", self.SCREEN_WIDTH / 2, self.SCREEN_HEIGHT / 2 + 120,
             arcade.color.CYAN, 32, anchor_x="center", bold=True
@@ -42,7 +37,6 @@ class MenuView(arcade.View):
             self.SCREEN_WIDTH / 2, 60, arcade.color.ANTI_FLASH_WHITE, 12, anchor_x="center",
         )
 
-        # Звуки
         self.sound_manager = SoundManager()
         self.sound_manager.play_music()
 
@@ -53,7 +47,6 @@ class MenuView(arcade.View):
         self.clear()
         arcade.draw_sprite(self.background)
 
-        # Полупрозрачная панель
         box_width = 390
         box_height = 380
         overlay_color = (20, 20, 20, 110)

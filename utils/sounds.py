@@ -1,4 +1,3 @@
-# utils/sounds.py
 import arcade
 from config import SOUNDS_DIR
 

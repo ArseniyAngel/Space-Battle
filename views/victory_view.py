@@ -1,4 +1,3 @@
-# views/victory_view.py
 import arcade
 from config import *
 from views.menu_view import MenuView

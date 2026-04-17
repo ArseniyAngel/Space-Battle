@@ -1,4 +1,3 @@
-# entities/particles.py
 import random
 import math
 import arcade

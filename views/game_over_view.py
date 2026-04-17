@@ -1,7 +1,5 @@
-# views/game_over_view.py
 import arcade
 from config import *
-
 
 
 class GameOverView(arcade.View):

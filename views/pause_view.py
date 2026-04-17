@@ -1,6 +1,4 @@
-# views/pause_view.py
 import arcade
-from config import *
 
 
 class PauseView(arcade.View):
@@ -50,7 +48,7 @@ class PauseView(arcade.View):
                 self.game_view.paused = False
                 self.window.show_view(self.game_view)
             elif action == "menu":
-                from  views.menu_view import MenuView
+                from views.menu_view import MenuView
                 self.window.show_view(MenuView())
         elif key == arcade.key.ESCAPE:
             self.window.show_view(self.game_view)

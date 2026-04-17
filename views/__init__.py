@@ -1,4 +1,3 @@
-# views/__init__.py
 from .menu_view import MenuView
 from .help_view import HelpView
 from .game_view import GameView

@@ -1,4 +1,3 @@
-# views/help_view.py
 import arcade
 from config import *
 
